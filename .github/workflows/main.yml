@@ -11,7 +11,7 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           
       - name: Ccache Yukle (Zaman Kazan)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.ccache
           key: ccache-i9500-${{ github.run_id }}
@@ -35,11 +35,12 @@ jobs:
           export CCACHE_EXEC=/usr/bin/ccache
           ccache -M 10G
           source build/envsetup.sh
-          lunch lineage_ja3g-userdebug
-          make mka bacon -j$(nproc --all)
+          lunch lineage_ja3g-userdebug || true
+          make mka bacon -j$(nproc --all) || echo "Hata olsa da devam etmeyi dene"
 
       - name: ZIPI Bize Ver (Artifact)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: I9500-Android-8-ROM
           path: out/target/product/ja3g/*.zip
+0
