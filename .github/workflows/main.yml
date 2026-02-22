@@ -1,0 +1,45 @@
+name: i9500_Android8_Build
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sunucuda Yer Aç (Microsoft Temizliği)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          
+      - name: Ccache Yukle (Zaman Kazan)
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: ccache-i9500-${{ github.run_id }}
+          restore-keys: ccache-i9500-
+
+      - name: Kodlari Cek (Saniyede GB'larca Hizla)
+        run: |
+          git config --global user.email "pepee@polonya.com"
+          git config --global user.name "Pepee"
+          repo init -u https://github.com/LineageOS/android.git -b lineage-15.1 --depth=1
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+      - name: Cihaz Dosyalarini Hazirla
+        run: |
+          git clone https://github.com/LineageOS/android_device_samsung_ja3g -b lineage-15.1 device/samsung/ja3g
+          git clone https://github.com/LineageOS/android_kernel_samsung_exynos5410 -b lineage-15.1 kernel/samsung/exynos5410
+
+      - name: Firina At (Derleme)
+        run: |
+          export USE_CCACHE=1
+          export CCACHE_EXEC=/usr/bin/ccache
+          ccache -M 10G
+          source build/envsetup.sh
+          lunch lineage_ja3g-userdebug
+          make mka bacon -j$(nproc --all)
+
+      - name: ZIPI Bize Ver (Artifact)
+        uses: actions/upload-artifact@v3
+        with:
+          name: I9500-Android-8-ROM
+          path: out/target/product/ja3g/*.zip
